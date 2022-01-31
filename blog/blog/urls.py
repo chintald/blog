@@ -23,4 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('core/', include('core.urls')),
     path('users/', include('users.urls')),
+    #for namespace
+    path('core/', include('core.urls', namespace='core')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

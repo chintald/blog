@@ -5,6 +5,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from .models import User, Profile
 
+
 def signup(request):
     if request.user.is_authenticated:
         return redirect('/core/home/')
@@ -71,9 +72,3 @@ def edit_profile(request,):
     else:
         form = EditProfileForm(request.user.username)
     return render(request, "users/edit_profile.html", {'form': form})
-
-
-#custom views for password_change
-
-def password_change_done(request):
-    return render(request, "users/password_change_done.html", {})
