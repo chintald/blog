@@ -18,10 +18,17 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+#For GraphQL
+from graphene_django.views import GraphQLView
+from django.views.decorators.csrf import csrf_exempt
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     #for namespace
     path('core/', include('core.urls', namespace='core')),
     path('users/', include('users.urls', namespace='users')),
+
+    #for GraphQL
+    path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

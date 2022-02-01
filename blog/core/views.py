@@ -16,9 +16,6 @@ from django.http import HttpResponseRedirect
 
 # Create your views here.
 
-# def home(request):
-#     context = {}
-#     return render(request, "core/home.html", context)
 
 def HomeView(request):
     data = Post.objects.all()
@@ -26,10 +23,6 @@ def HomeView(request):
     return render(request,"core/home.html", context)
 
 
-# def post_detail(request, post_id):
-#     post = Post.objects.get(id=post_id)
-#     context = {'post' : post}
-#     return render(request, "core/post_detail.html", context)
 
 #Generic Views for Post Comments
 

@@ -24,12 +24,7 @@ from .views import PostCreateView, PostUpdateView, PostDeleteView, PostView
 app_name = 'core'
 
 urlpatterns = [
-    # path('', views.home, name='home'),
     path('home/', views.HomeView, name='home'),
-    # path('post/<pk>/<slug:slug>', PostView.as_view(), name='PostView'),
-    # path('bridge/', views.bridge, name='bridge'),
-    
-    # path('<post_id>/post_detail/', views.post_detail, name='post_detail'),
     
     #For Post Operations
 
