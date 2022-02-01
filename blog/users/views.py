@@ -4,11 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from .models import User, Profile
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+from core import urls
 
 
 def signup(request):
     if request.user.is_authenticated:
-        return redirect('/core/home/')
+        return HttpResponseRedirect(reverse('core:home'))
     if request.method == 'POST':
         form = SignUpForm(request.POST)
         if form.is_valid():
@@ -16,14 +19,14 @@ def signup(request):
             login(request, user)
             # display a nice message when a new user is registered
             messages.success(request, "Congratulations, you are now a registered user!")
-            return redirect('/core/home/')
+            return HttpResponseRedirect(reverse('core:home'))
     else:
         form = SignUpForm()
     return render(request, 'users/signup.html', {'form': form})
 
 def log_in(request):
     if request.user.is_authenticated:
-        return redirect('/core/home/')
+        return HttpResponseRedirect(reverse('core:home'))
     if request.method == "POST":
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -33,7 +36,7 @@ def log_in(request):
             user = authenticate(email=email, password=password)
             if user:  # If the returned object is not None
                 login(request, user)  # we connect the user
-                return redirect('/core/home/')
+                return redirect(reverse(('core:home')))
             else:  # otherwise an error will be displayed
                 messages.error(request, 'Invalid email or password')
     else:
@@ -43,7 +46,7 @@ def log_in(request):
 
 def log_out(request):
     logout(request)
-    return redirect('/users/login/')
+    return HttpResponseRedirect(reverse('users:log_in'))
 
 @login_required
 def profile(request, username):
@@ -68,7 +71,7 @@ def edit_profile(request,):
             if image:
                 profile.image = image
             profile.save()
-            return redirect('/core/home/', username=user.username)
+            return redirect("users:profile", username=user.username)
     else:
         form = EditProfileForm(request.user.username)
     return render(request, "users/edit_profile.html", {'form': form})

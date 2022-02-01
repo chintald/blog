@@ -17,22 +17,23 @@ from django.contrib import admin
 from django.urls import path, include
 from core import views
 from . import views
-
+from django.contrib.auth import views as auth_views
 #for post's generic views
-from .views import PostCreateView, PostUpdateView, PostDeleteView
+from .views import PostCreateView, PostUpdateView, PostDeleteView, PostView
 
 app_name = 'core'
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('home/', views.HomeView, name='HomeView'),
+    # path('', views.home, name='home'),
+    path('home/', views.HomeView, name='home'),
     # path('post/<pk>/<slug:slug>', PostView.as_view(), name='PostView'),
     # path('bridge/', views.bridge, name='bridge'),
     
-    path('<post_id>/post_detail/', views.post_detail, name='post_detail'),
+    # path('<post_id>/post_detail/', views.post_detail, name='post_detail'),
     
     #For Post Operations
 
+    path('post/<pk>/<slug:slug>', PostView.as_view(), name='post'),
     path('post/create/', PostCreateView.as_view(), name='post_create'),
     path('post/<int:pk>/', PostUpdateView.as_view(), name='post_update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post_delete'),

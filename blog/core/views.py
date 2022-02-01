@@ -10,25 +10,26 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from core.models import Post, Comment
 from .forms import CommentForm
 from django.utils.text import slugify
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 
 # Create your views here.
 
-def home(request):
-    context = {}
-    return render(request, "base.html", context)
+# def home(request):
+#     context = {}
+#     return render(request, "core/home.html", context)
 
 def HomeView(request):
     data = Post.objects.all()
-    context = { 'data' : data }
+    context = { 'data' : data}
     return render(request,"core/home.html", context)
 
 
-def post_detail(request, post_id):
-    post = Post.objects.get(id=post_id)
-    context = {'post' : post}
-    return render(request, "core/post_detail.html", context)
+# def post_detail(request, post_id):
+#     post = Post.objects.get(id=post_id)
+#     context = {'post' : post}
+#     return render(request, "core/post_detail.html", context)
 
 #Generic Views for Post Comments
 
@@ -63,7 +64,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         messages.success(
             self.request, 'Your post has been updated successfully.')
-        return reverse_lazy("core:home")
+        return reverse_lazy("core:")
 
     #This method filters the post so only the owner can access it
     def get_queryset(self):
@@ -82,9 +83,15 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         return self.model.objects.filter(author=self.request.user)
 
-class PostView(DetailView):
+class PostView(LoginRequiredMixin, DetailView):
     model = Post
-    template_name = "core/post.html"
+    template_name = "core/post_detail.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return HttpResponseRedirect(reverse('users:log_in'))
+
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

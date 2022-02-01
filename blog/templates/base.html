@@ -14,13 +14,13 @@
 <body>
   <nav class="navbar navbar-expand-sm navbar-light bg-light">
     <div class="container">
-      <a href="/core/home/" class="navbar-brand">Django blog</a>
+      <a href="{% url 'core:home' %}" class="navbar-brand">Django blog</a>
       <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-between" id="navbarCollapse">
         <div class="navbar-nav">
-          <a href="/core/home/"
+          <a href="{% url 'core:home' %}"
             class="nav-item nav-link  {% if request.path == '/' %}active{% endif %}">Home</a>
         </div>
 
@@ -30,17 +30,17 @@
     class="nav-item nav-link {% if request.path == '/post/create/' %}active{% endif %}">
     Create a post
   </a>
-          <a href="{% url 'profile' request.user.username %}"
+          <a href="{% url 'users:profile' request.user.username %}"
             class="nav-item nav-link {% if request.user.username in request.path %}active{% endif %}">
             Profile
          </a>
-          <a href="/users/logout/" class="nav-item nav-link">Log out</a>
+          <a href="{% url 'users:log_out' %}" class="nav-item nav-link">Log out</a>
         </div>
         {% else %}
         <div class="navbar-nav ml-auto">
-          <a href="/users/login/"
+          <a href="{% url 'users:log_in' %}"
             class="nav-item nav-link {% if request.path == '/users/login/' %}active{% endif %}">Log in</a>
-          <a href="/users/signup/"
+          <a href="{% url 'users:signup' %}"
             class="nav-item nav-link {% if request.path == '/users/signup/' %}active{% endif %}">Sign up</a>
         </div>
         {% endif %}
