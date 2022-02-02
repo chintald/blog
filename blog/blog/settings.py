@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'graphene_django',
     'graphql_auth',
     'django_filters',
+    'graphql_jwt.refresh_token.apps.RefreshTokenConfig',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -63,12 +64,26 @@ MIDDLEWARE = [
 
 GRAPHENE = {
     "SCHEMA": "blog.schema.schema",
+    'MIDDLEWARE': [
+        'graphql_jwt.middleware.JSONWebTokenMiddleware',
+    ]
 }
 
 AUTHENTICATION_BACKENDS = [
+    # 'graphql_jwt.backends.JSONWebokenBackend',
     'django.contrib.auth.backends.ModelBackend',
-    "graphql_auth.backends.GraphQLAuthBackend",
+    'graphql_auth.backends.GraphQLAuthBackend',
 ]
+
+GRAPHQL_JWT = {
+    "JWT_ALLOW_ANY_CLASSES": [
+        "graphql_auth.mutations.Register",
+        "graphql_auth.mutations.VerifyAccount",
+        "graphql_auth.mutations.ObtainJSONWebToken",
+    ],
+    "JWT_VERIFY_EXPIRATION": True,
+    "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
+}
 
 ROOT_URLCONF = 'blog.urls'
 
@@ -160,4 +175,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = "/users/login/"
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

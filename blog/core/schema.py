@@ -1,4 +1,6 @@
-# from typing_extensions import Required
+from email import contentmanager
+from typing_extensions import Required
+from urllib import request
 import graphene
 from graphene_django import DjangoObjectType
 from core.models import Tag, Post, Comment
@@ -67,16 +69,30 @@ class CommentType(DjangoObjectType):
         model = Comment
         fields = ("id", "name", "email", "content", "post", "created")
 
-# class CreaeteComment(graphene.Mutation):
-#     class Arguments:
-#         name = graphene.String(Required=True)
+class CreaeteComment(graphene.Mutation):
+    class Arguments:
+        name = graphene.String(required=True)
+        email = graphene.String(required=True)
+        content = graphene.String(required=True)
+        p_id = graphene.ID(required=True)
+
+    comment = graphene.Field(CommentType)
+
+    def mutate(self, root, name, email, content,p_id):
+        post_id = Post.objects.get(id)
+        if p_id == post_id:
+            comment = Comment.objects.create(
+                name=name,
+                email=email,
+                content=content,
+            )
+        comment.save()
+        return CreaeteComment(
+            comment = comment
+        )
 
 #Schema for Comment End
 
-class Mutation(graphene.ObjectType):
-    create_tag = CreateTag.Field()
-    update_tag = UpdateTag.Field()
-    delte_tag = DeleteTag.Field()
 
 
 class PostType(DjangoObjectType):
@@ -192,3 +208,10 @@ class Query(graphene.ObjectType):
         return(
             Tag.objects.get(name=tag)
         )
+
+
+class Mutation(graphene.ObjectType):
+    create_tag = CreateTag.Field()
+    update_tag = UpdateTag.Field()
+    # delte_tag = DeleteTag.Field()
+    create_comment = CreaeteComment.Field()
