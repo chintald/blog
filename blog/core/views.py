@@ -57,7 +57,7 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         messages.success(
             self.request, 'Your post has been updated successfully.')
-        return reverse_lazy("core:")
+        return reverse_lazy("core:home")
 
     #This method filters the post so only the owner can access it
     def get_queryset(self):

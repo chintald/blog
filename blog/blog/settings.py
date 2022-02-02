@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'users',
     'core',
     'graphene_django',
+    'graphql_auth',
+    'django_filters',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -56,6 +58,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+]
+
+GRAPHENE = {
+    "SCHEMA": "blog.schema.schema",
+}
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    "graphql_auth.backends.GraphQLAuthBackend",
 ]
 
 ROOT_URLCONF = 'blog.urls'
@@ -148,6 +160,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = "/users/login/"
 
-GRAPHENE = {
-    "SCHEMA": "blog.schema.schema"
-}
+
