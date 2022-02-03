@@ -47,18 +47,18 @@ class UpdateTag(graphene.Mutation):
 
   #No need of delete tag as the tags are defined by admin
 
-# class DeleteTag(graphene.Mutation):
-#     class Arguments:
-#         id = graphene.ID()
+class DeleteTag(graphene.Mutation):
+    class Arguments:
+        id = graphene.ID()
     
-#     tag = graphene.Field(TagType)
+    tag = graphene.Field(TagType)
 
-#     def mutate(self, info, id):
-#         tag = Tag.objects.get(pk=id)
-#         if Tag is not None:
-#             tag.delete()
+    def mutate(self, info, id):
+        tag = Tag.objects.get(pk=id)
+        if Tag is not None:
+            tag.delete()
         
-#         return DeleteTag(tag=tag)
+        return DeleteTag(tag=tag)
 
 #Schema for Tag End
 
@@ -69,27 +69,32 @@ class CommentType(DjangoObjectType):
         model = Comment
         fields = ("id", "name", "email", "content", "post", "created")
 
+#### Have doubts regarding Comment mutations
+
 class CreaeteComment(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
         email = graphene.String(required=True)
         content = graphene.String(required=True)
-        p_id = graphene.ID(required=True)
+        post_id = graphene.ID(required=True)
+        
 
     comment = graphene.Field(CommentType)
 
-    def mutate(self, root, name, email, content,p_id):
-        post_id = Post.objects.get(id)
-        if p_id == post_id:
+    def mutate(self, root, name, email, content,post_id):
+        post = Post.objects.get(id=post_id)
+        if post is not None:
             comment = Comment.objects.create(
                 name=name,
                 email=email,
                 content=content,
+                post=post
             )
         comment.save()
         return CreaeteComment(
             comment = comment
         )
+        
 
 #Schema for Comment End
 
@@ -213,5 +218,5 @@ class Query(graphene.ObjectType):
 class Mutation(graphene.ObjectType):
     create_tag = CreateTag.Field()
     update_tag = UpdateTag.Field()
-    # delte_tag = DeleteTag.Field()
+    delte_tag = DeleteTag.Field()
     create_comment = CreaeteComment.Field()
