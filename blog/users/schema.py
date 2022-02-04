@@ -10,6 +10,8 @@ from users.models import User, Profile
 from blog.utils import can 
 from graphql_jwt.decorators import login_required
 from graphql import GraphQLError
+import graphql_jwt
+
 #Schema for User
 
 class UserFields:
@@ -175,18 +177,30 @@ class Query(graphene.ObjectType):
             return info.context.user
 
     @login_required
+
     def resolve_users(self, info):
         if info.context.user.is_superuser:
-            user = info.context.user
-        return User.objects.all()
+            user = User.objects.all()
+        
+        else:
+            raise GraphQLError('You must be an admin to see the users!')
+
+        return user
 
     def resolve_profile(self, info):
-        return Profile.objects.all()
+        if info.context.user.is_superuser:
+            profile = Profile.objects.all()
+        
+        else:
+            raise GraphQLError('You must be an admin to see the profiles!')
+        
+        return profile
 
 
 #Mutation Class
 
 class Mutation(graphene.ObjectType):
+    # token_auth = graphql_jwt.ObtainJSONWebToken.Field()
     create_user =  CreateUser.Field()
     update_user = UpdateUser.Field()
     delete_user = DeleteUser.Field()

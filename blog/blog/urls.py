@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 #For GraphQL
 from django.views.decorators.csrf import csrf_exempt
 from .views import PrivateGraphQLView   
+# from graphql_jwt.decorators import jwt_cookie
 
 urlpatterns = [
     path('admin/', admin.site.urls),

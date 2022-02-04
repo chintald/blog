@@ -1,12 +1,13 @@
 from email import contentmanager
-from typing_extensions import Required
+import email
 from urllib import request
 import graphene
 from graphene_django import DjangoObjectType
 from core.models import Tag, Post, Comment
 from users. models import User, Profile
 from users.schema import UserType
-
+import graphql_jwt
+from graphql import GraphQLError
 
 #Schema for Tag Start
 class TagType(DjangoObjectType):
@@ -20,11 +21,15 @@ class CreateTag(graphene.Mutation):
 
     tag = graphene.Field(TagType)
 
-    def mutate(self, root, name):
-        tag = Tag.objects.create(
-            name = name
-        )
-        tag.save()
+    def mutate(self,info, name):
+        if info.context.user.is_superuser:
+            tag = Tag.objects.create(
+                name = name
+            )
+            tag.save()
+
+        else:
+            raise GraphQLError('You must be an admin to create a tag!')
 
         return CreateTag(
             tag = tag
@@ -38,10 +43,14 @@ class UpdateTag(graphene.Mutation):
     tag = graphene.Field(TagType)
 
     def mutate(self, info,id, name=None):
-        tag = Tag.objects.get(pk=id)
-        tag.name = name if name is not None else tag.name
+        if info.context.user.is_superuser:
+            tag = Tag.objects.get(pk=id)
+            tag.name = name if name is not None else tag.name
 
-        tag.save()
+            tag.save()
+
+        else:
+            raise GraphQLError('You must be an admin to update the tag!')
 
         return UpdateTag(tag=tag)
 
@@ -54,9 +63,13 @@ class DeleteTag(graphene.Mutation):
     tag = graphene.Field(TagType)
 
     def mutate(self, info, id):
-        tag = Tag.objects.get(pk=id)
-        if Tag is not None:
-            tag.delete()
+        if info.context.user.is_superuser:
+            tag = Tag.objects.get(pk=id)
+            if Tag is not None:
+                tag.delete()
+        
+        else:
+            raise GraphQLError('You must be an admin to delete the tag!')
         
         return DeleteTag(tag=tag)
 
@@ -73,28 +86,43 @@ class CommentType(DjangoObjectType):
 
 class CreaeteComment(graphene.Mutation):
     class Arguments:
-        name = graphene.String(required=True)
-        email = graphene.String(required=True)
+        # name = graphene.String(required=True)
+        # email = graphene.String(required=True)
         content = graphene.String(required=True)
         post_id = graphene.ID(required=True)
         
 
     comment = graphene.Field(CommentType)
 
-    def mutate(self, root, name, email, content,post_id):
+    def mutate(self, info, content,post_id):
         post = Post.objects.get(id=post_id)
-        if post is not None:
-            comment = Comment.objects.create(
-                name=name,
-                email=email,
-                content=content,
-                post=post
-            )
-        comment.save()
+        if info.context.user.is_superuser or info.context.user.is_authenticated:
+            if post is not None:
+                comment = Comment.objects.create(
+                    name=info.context.user.username,
+                    email=info.context.user.email,
+                    content=content,
+                    post=Post.objects.get(id=post_id)
+                )
+            comment.save()
         return CreaeteComment(
             comment = comment
         )
-        
+
+class UpdateComment(graphene.Mutation):
+    comment = graphene.Field(CommentType)
+    class Arguments:
+        comment_id = graphene.ID(required=True)
+        content = graphene.String()
+
+    def mutate(self, info, comment_id, content):
+        comment = Comment.objects.get(id=comment_id)
+        if info.context.user.is_superuser or info.context.user.username == comment.name:
+            comment.content = content
+        else:
+            raise GraphQLError('You must be an admin to update comment!')
+
+        return UpdateComment(comment=comment)
 
 #Schema for Comment End
 
@@ -105,6 +133,71 @@ class PostType(DjangoObjectType):
         model = Post
         fields = ("id", "title", "slug", "author", "content", "image", "tags", "created_on", "updated_on")
 
+class CreatePost(graphene.Mutation):
+    post = graphene.Field(PostType)
+
+    class Arguments:
+        title = graphene.String(required=True)
+        slug = graphene.String(required=True)
+        content = graphene.String(required=True)
+
+    def mutate(self, info, title, slug, content):
+        if info.context.user.is_authenticated:
+            post = Post.objects.create(
+                title = title,
+                slug = slug,
+                content = content,
+                author = User.objects.get(username=info.context.user.username)
+            )
+
+        else:
+            raise GraphQLError('Failed to upload post.')
+
+        return CreatePost(post=post)
+
+
+class UpdatePost(graphene.Mutation):
+    post = graphene.Field(PostType)
+
+    class Arguments:
+        post_id = graphene.ID(required=True)
+        content = graphene.String()
+        title = graphene.String()
+    
+    def mutate(self, info, post_id, content, title):
+        post = Post.objects.get(id=post_id)
+
+
+        if info.context.user.is_superuser or info.context.user.is_authenticated:
+            post.content = content
+            post.title = title
+            
+            post.save()
+
+        else:
+            raise GraphQLError('You must be an admin to Update the post!')
+
+        return UpdatePost(post=post)
+
+class DeletePost(graphene.Mutation):
+    post = graphene.Field(PostType)
+
+    class Arguments:
+        post_id = graphene.ID(required=True)
+
+    def mutate(self, info, post_id):
+        post = Post.objects.get(id=post_id)
+        # post_author = User.objects.get(username=post.author)
+        
+
+        
+        if info.context.user.is_superuser or info.context.user.is_authenticated:
+            post.delete()
+        
+        else:
+            raise GraphQLError('You must be an admin to Delete the post!')
+
+        return DeletePost(post=post)
 
 #Qery for whole schema
 
@@ -113,26 +206,29 @@ class Query(graphene.ObjectType):
     #For Posts
 
     all_posts = graphene.List(PostType)
-    post_by_title = graphene.Field(PostType, title=graphene.String())
-    post_by_slug = graphene.Field(PostType, slug=graphene.String())
-    post_by_tag = graphene.List(TagType, tag=graphene.String())
+    post_title = graphene.Field(PostType, title=graphene.String())
+    post_slug = graphene.Field(PostType, slug=graphene.String())
+    post_tag = graphene.List(TagType, tag=graphene.String())
     post_author = graphene.Field(UserType, author=graphene.String())
     post_content = graphene.Field(PostType, content=graphene.String())
     post_created_on = graphene.Field(PostType, created_on=graphene.String())
     post_updated_on = graphene.Field(PostType, updated_on=graphene.String())
         
     def resolve_all_posts(root, info):
-        return(
+        if info.context.user.is_superuser:
+            return(
             Post.objects.prefetch_related("tags")
             .select_related("author").all()
-        )
+            )
+        else:
+            raise GraphQLError('You must be an admin to see all the posts!')
 
     def resolve_post_author(root, info, author):
         return(
             User.objects.get(author=author) 
         )
 
-    def resolve_post_by_slug(root, info, slug):
+    def resolve_post_slug(root, info, slug):
         return(
             Post.objects.prefetch_related("tags")
             .select_related("author")
@@ -140,7 +236,7 @@ class Query(graphene.ObjectType):
         )
 
 
-    def resolve_post_by_tag(root, info, tag):
+    def resolve_post_tag(root, info, tag):
         return (
             Tag.objects.prefetch_related("tags")
             .select_related("author")
@@ -205,18 +301,29 @@ class Query(graphene.ObjectType):
     tag = graphene.Field(TagType, tag=graphene.String())
 
     def resolve_all_tags(root, info):
-        return(
+        if info.context.user.is_superuser:
+            return(
             Tag.objects.all()
         )
+        else:
+            raise GraphQLError('You must be an admin to see all the tags!')
+        
 
     def resolve_tag(root, info, tag):
         return(
-            Tag.objects.get(name=tag)
+            Tag.objects.get(tag=tag)
         )
 
 
 class Mutation(graphene.ObjectType):
+    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
+
+    create_post = CreatePost.Field()
+    update_post = UpdatePost.Field()
+    delete_post = DeletePost.Field()
     create_tag = CreateTag.Field()
     update_tag = UpdateTag.Field()
     delte_tag = DeleteTag.Field()
     create_comment = CreaeteComment.Field()
+    update_comment = UpdateComment.Field()
+

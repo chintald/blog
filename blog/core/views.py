@@ -1,3 +1,5 @@
+from dataclasses import fields
+from urllib import request
 from django.shortcuts import render, redirect,get_object_or_404
 from django.views.generic import (
     ListView,
@@ -8,7 +10,7 @@ from django.views.generic import (
 )
 from django.contrib.auth.mixins import LoginRequiredMixin
 from core.models import Post, Comment
-from .forms import CommentForm
+from .forms import CommentForm, CommentUpdateForm
 from django.utils.text import slugify
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -22,6 +24,23 @@ def HomeView(request):
     context = { 'data' : data}
     return render(request,"core/home.html", context)
 
+# def CommentUpdateView(request, comment_id):
+
+#         # if comment_id:    
+#         #     # form = CommentUpdateForm(instance=Comment.objects.get(id = comment_id), data = request.POST)
+#         # else:
+#         #     form = CommentUpdateForm(data=request.POST)
+#     data = Comment.objects.get(id=comment_id)
+#     context = { 'data' : data }
+#     return render (request, 'core/CommentUpdateForm.html', context)
+
+# def CommentUpdateDone(request, comment_id, updated_content):
+#     form = CommentUpdateForm(request.content. request.POST)
+#     content = form.cleaned_data['content']
+#     comment = Comment.objects.get(id=comment_id)
+#     comment.content = content
+#     comment.save()
+#     return redirect("core:home")
 
 
 #Generic Views for Post Comments
@@ -90,6 +109,7 @@ class PostView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         pk = self.kwargs["pk"]
         slug = self.kwargs["slug"]
+        comment_author = Comment.objects.all()
 
         form = CommentForm()
         post = get_object_or_404(Post, pk=pk, slug=slug)
@@ -98,6 +118,7 @@ class PostView(LoginRequiredMixin, DetailView):
         context['post'] = post
         context['comments'] = comments
         context['form'] = form
+        context['comment_author'] = comment_author
         return context
 
     def post(self, request, *args, **kwargs):
@@ -126,3 +147,7 @@ class PostView(LoginRequiredMixin, DetailView):
             return self.render_to_response(context=context)
 
         return self.render_to_response(context=context)
+
+
+
+    

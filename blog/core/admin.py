@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, Tag
+from .models import Post, Tag, Comment
 
 # Register your models here.
 
@@ -17,3 +17,8 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 admin.site.register(Tag, TagAdmin)
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'email', 'content')
+
+admin.site.register(Comment, CommentAdmin)
